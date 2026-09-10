@@ -67,6 +67,20 @@ export function RestTimer({
     }
   }, [storageKey]);
 
+  /**
+   * The current duration, readable from an event handler without going stale.
+   *
+   * A drag fires pointerdown, pointermove and pointerup fast enough that React
+   * may not have re-rendered in between, so a handler closing over `duration`
+   * still sees the value from before the drag and writes that to storage. The
+   * display was right and the saved value was wrong — the new length silently
+   * reverted on reload. Reading through a ref avoids it.
+   */
+  const durationRef = useRef(duration);
+  useEffect(() => {
+    durationRef.current = duration;
+  }, [duration]);
+
   const persist = useCallback(
     (seconds: number) => {
       try {
@@ -118,7 +132,8 @@ export function RestTimer({
     if (!from) return;
     const steps = Math.round((e.clientX - from.x) / PX_PER_STEP);
     const next = clamp(from.seconds + steps * STEP);
-    if (next !== duration) {
+    if (next !== durationRef.current) {
+      durationRef.current = next;
       setDuration(next);
       if (!running) setRemaining(next);
     }
@@ -127,12 +142,13 @@ export function RestTimer({
   const onPointerUp = () => {
     if (dragFrom.current) {
       dragFrom.current = null;
-      persist(duration);
+      persist(durationRef.current);
     }
   };
 
   const nudge = (by: number) => {
-    const next = clamp(duration + by);
+    const next = clamp(durationRef.current + by);
+    durationRef.current = next;
     setDuration(next);
     if (!running) setRemaining(next);
     persist(next);
@@ -160,7 +176,7 @@ export function RestTimer({
           if (!adjusting) setAdjusting(true);
           else {
             setAdjusting(false);
-            persist(duration);
+            persist(durationRef.current);
           }
         }}
         onPointerDown={onPointerDown}
