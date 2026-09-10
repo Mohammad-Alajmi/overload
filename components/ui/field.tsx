@@ -36,15 +36,30 @@ export function Input({
   return <input className={cn(inputBase, className)} {...props} />;
 }
 
-/** For weights, reps and RPE: mono tabular figures and a numeric keypad. */
+/**
+ * For weights, reps and RPE: mono tabular figures and a numeric keypad.
+ *
+ * Deliberately `type="text"` rather than `type="number"`. Chrome renders a
+ * number input's value in the browser locale's numbering system, so on an
+ * Arabic-locale browser a weight of 92.5 displays as ٩٢٫٥ — the same problem
+ * the date input has, and just as impossible to override with markup. A text
+ * input renders the literal string, so the digits stay as typed.
+ *
+ * `inputMode="decimal"` still brings up the numeric keypad on a phone, and the
+ * values are validated on the server and by the database CHECK constraints,
+ * which is where it has to hold anyway.
+ */
 export function NumberInput({
   className,
   ...props
 }: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
-      type="number"
+      type="text"
       inputMode="decimal"
+      autoComplete="off"
+      lang="en"
+      dir="ltr"
       className={cn(inputBase, "nums", className)}
       {...props}
     />

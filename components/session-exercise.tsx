@@ -182,33 +182,32 @@ export function SessionExercise({
                   {formatWeight(Number(row.weight))} kg × {row.reps}
                 </p>
               ) : (
+                /* Fixed widths, not flex-1 — a weight never needs more than a
+                   few characters, and stretching it across a desktop row made
+                   the number look lost in an empty box. */
                 <div className="flex flex-1 items-center gap-2">
-                  <label className="flex flex-1 items-center gap-1.5">
+                  <label className="flex items-center gap-1.5">
                     <span className="sr-only">
                       Weight in kilograms for set {index + 1}
                     </span>
                     <NumberInput
                       value={row.weight}
                       onChange={(e) => patch(index, { weight: e.target.value })}
-                      step="0.5"
-                      min="0"
-                      max="999"
-                      className="w-full text-center"
+                      maxLength={6}
+                      className="w-20 text-center"
                     />
                     <span className="shrink-0 text-xs text-faint">kg</span>
                   </label>
                   <span aria-hidden className="text-faint">
                     ×
                   </span>
-                  <label className="flex w-20 items-center gap-1.5">
+                  <label className="flex items-center">
                     <span className="sr-only">Reps for set {index + 1}</span>
                     <NumberInput
                       value={row.reps}
                       onChange={(e) => patch(index, { reps: e.target.value })}
-                      step="1"
-                      min="1"
-                      max="100"
-                      className="w-full text-center"
+                      maxLength={3}
+                      className="w-14 text-center"
                     />
                   </label>
                 </div>
