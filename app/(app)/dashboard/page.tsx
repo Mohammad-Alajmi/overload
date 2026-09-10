@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { getUser, displayNameOf } from "@/lib/supabase/server";
-import { getSets } from "@/lib/data";
+import { getProfile, getSets } from "@/lib/data";
 import { rolling7, bySession } from "@/lib/progression";
 import {
   DEFAULT_ROUTINE,
@@ -10,7 +10,7 @@ import {
   nextWorkout,
 } from "@/lib/routines";
 import { addSetHref } from "@/lib/links";
-import { formatDay, formatTonnage } from "@/lib/format";
+import { formatDay, formatTonnage, todayISO } from "@/lib/format";
 import { StatTile } from "@/components/ui/stat-tile";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ButtonLink } from "@/components/ui/button";
@@ -19,15 +19,18 @@ import { SampleWeekButton } from "@/components/sample-week-button";
 export const metadata: Metadata = { title: "Today" };
 
 export default async function DashboardPage() {
-  const user = await getUser();
-  const name = user ? displayNameOf(user) : "there";
+  const profile = await getProfile();
+  // Fall back to auth metadata if a profile row is somehow missing, so the
+  // greeting never renders as "Hello, undefined".
+  const user = profile ? null : await getUser();
+  const name =
+    profile?.display_name ?? (user ? displayNameOf(user) : "there");
+
   const sets = await getSets();
   const week = rolling7(sets);
 
-  const activeSlug =
-    (user?.user_metadata?.active_routine as string | undefined) ??
-    DEFAULT_ROUTINE;
-  const routine = getRoutine(activeSlug) ?? ROUTINES[0];
+  const routine =
+    getRoutine(profile?.active_routine ?? DEFAULT_ROUTINE) ?? ROUTINES[0];
 
   // Which day is due is derived, never stored: look at the most recent set that
   // carried this routine's tag and offer the one after it.
@@ -39,7 +42,7 @@ export default async function DashboardPage() {
   return (
     <>
       <header className="mb-6">
-        <p className="label">{formatDay(new Date().toISOString().slice(0, 10))}</p>
+        <p className="label">{formatDay(todayISO())}</p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">
           Hello, {name}.
         </h1>
@@ -57,11 +60,11 @@ export default async function DashboardPage() {
             <p className="mt-0.5 text-sm text-muted">{due.focus}</p>
           </div>
           <ButtonLink
-            href={`/routines/${routine.slug}?day=${encodeURIComponent(due.name)}`}
+            href={`/session?routine=${routine.slug}&day=${encodeURIComponent(due.name)}`}
             size="sm"
             className="shrink-0"
           >
-            Open
+            Start
           </ButtonLink>
         </div>
         <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-1 border-t border-accent/20 pt-3">

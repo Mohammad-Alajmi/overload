@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Field, Input, NumberInput, Textarea } from "@/components/ui/field";
+import { DateField } from "@/components/ui/date-field";
 import { useToast } from "@/components/ui/toast";
 import { createSetAction, updateSetAction } from "@/app/(app)/log/actions";
 import type { ActionResult, LiftSet } from "@/lib/types";
@@ -162,11 +163,8 @@ export function SetSheet({
           </div>
 
           <Field label="Day" error={fieldError("performed_on")}>
-            <Input
+            <DateField
               name="performed_on"
-              type="date"
-              required
-              className="nums"
               defaultValue={editing?.performed_on ?? today}
             />
           </Field>

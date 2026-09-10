@@ -2,8 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getRoutine, DEFAULT_ROUTINE } from "@/lib/routines";
-import { getUser } from "@/lib/supabase/server";
-import { getSets } from "@/lib/data";
+import { getProfile, getSets } from "@/lib/data";
 import { setActiveRoutineAction } from "@/app/auth/actions";
 import { addSetHref } from "@/lib/links";
 import { formatDay, formatSet } from "@/lib/format";
@@ -33,10 +32,8 @@ export default async function RoutinePage({
   const routine = getRoutine(slug);
   if (!routine) notFound();
 
-  const user = await getUser();
-  const activeSlug =
-    (user?.user_metadata?.active_routine as string | undefined) ??
-    DEFAULT_ROUTINE;
+  const profile = await getProfile();
+  const activeSlug = profile?.active_routine ?? DEFAULT_ROUTINE;
   const isActive = routine.slug === activeSlug;
 
   const sets = await getSets();
@@ -152,12 +149,14 @@ export default async function RoutinePage({
           })}
         </ul>
 
+        {/* The whole day at once, every exercise prefilled — the normal way to
+            use this. The per-lift "Log" buttons above stay for one-off sets. */}
         <footer className="border-t border-line p-3">
           <ButtonLink
-            href={addSetHref({ routine: routine.slug, day: selected.name })}
+            href={`/session?routine=${routine.slug}&day=${encodeURIComponent(selected.name)}`}
             className="w-full"
           >
-            Log {selected.name}
+            Start {selected.name}
           </ButtonLink>
         </footer>
       </section>

@@ -44,6 +44,26 @@ create table public.sets (
 );
 ```
 
+And the member's own details, which used to live as JSON on the auth user record:
+
+```sql
+create table public.profiles (
+  id             uuid primary key references auth.users(id) on delete cascade,
+  email          text not null,
+  display_name   text not null check (char_length(trim(display_name)) between 1 and 40),
+  active_routine text not null default 'upper-lower-4'
+                   check (active_routine in ('full-body-3','upper-lower-4','ppl-6')),
+  rest_seconds   integer not null default 90 check (rest_seconds between 15 and 600),
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now()
+);
+```
+
+A trigger on `auth.users` creates the row the instant an account is created, so
+the app never has to handle a signed-in member with no profile, and a second
+trigger keeps `email` in step if the account email changes. Members can read and
+update their own row but cannot insert or delete one — that is the trigger's job.
+
 ### Policies
 
 ```sql
@@ -166,10 +186,15 @@ app/
     dashboard/               greeting, next workout, rolling 7-day stats
     log/                     session-grouped log, filter, add/edit sheet
     log/actions.ts           create, update, delete, load sample week
+    session/                 a whole routine day, every set prefilled
+    session/actions.ts       log one set, undo one set
     progression/             per-lift estimated 1RM trend
-    routines/                three routines, each day loggable in one tap
-    me/                      stats, active routine, log out
+    routines/                three routines, each day startable in one tap
+    me/                      details, stats, active routine, log out
 components/                  ui primitives, set card, set sheet, SVG chart
+  ui/date-field.tsx          English date picker, built by hand
+  rest-timer.tsx             per-exercise rest, tap then drag to change
+  session-exercise.tsx       one exercise, its sets, its timer
 lib/
   supabase/                  server client (cookie sessions) + session middleware
   progression.ts             Epley e1RM, PRs, session deltas, rolling 7 days
@@ -189,8 +214,26 @@ alone would rank 100 kg × 2 above 95 kg × 8, which is the wrong way round.
 so a table would add a migration, a policy, a seed step and a query for data that
 never changes.
 
-**Display name and active routine live in user metadata**, not a `profiles`
-table. One less table, and one less RLS policy to get wrong.
+**Display name and active routine live in `public.profiles`.** They started as
+JSON on the auth user record, which is fine until you want to constrain a value,
+index it, or read it for anyone but the current member — none of which JSON on an
+auth row supports. A real table with the same owner-only policy shape costs one
+migration and buys all three.
+
+**A session logs each set as it is ticked**, rather than holding the whole
+workout in the page behind a Save button. A finished set is an event that already
+happened; losing it because a phone locked mid-workout is worse than an extra
+request.
+
+**The date picker is hand-built.** `<input type="date">` renders its text and its
+calendar in the *browser's* UI language, not the page's, and no attribute
+overrides it — on an Arabic-locale browser the filters read as
+"كنس/رهش/موي". Writing the month and weekday names out is the only way to make
+the control read the same for everyone.
+
+**Rest length is remembered in `localStorage`, per exercise.** It is a
+per-device convenience, not shared state, so it does not belong in the database.
+The account-wide default does, and lives on the profile.
 
 **Which routine day is due is derived, never stored.** The dashboard finds the
 most recent set carrying the active routine's tag and offers the day after it.

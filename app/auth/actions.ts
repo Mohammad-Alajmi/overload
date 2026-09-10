@@ -83,10 +83,58 @@ export async function logOutAction(): Promise<void> {
   redirect("/login");
 }
 
+const ROUTINE_SLUGS = new Set(["full-body-3", "upper-lower-4", "ppl-6"]);
+
+/**
+ * Active routine lives in public.profiles now, not in auth metadata. A real
+ * column can be constrained, indexed and queried; a JSON blob on the user
+ * record can only be read back one member at a time.
+ */
 export async function setActiveRoutineAction(formData: FormData): Promise<void> {
   const slug = String(formData.get("routine") ?? "");
+  if (!ROUTINE_SLUGS.has(slug)) redirect("/routines");
+
   const supabase = await createClient();
-  await supabase.auth.updateUser({ data: { active_routine: slug } });
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) redirect("/login");
+
+  await supabase
+    .from("profiles")
+    .update({ active_routine: slug })
+    .eq("id", user.user.id);
+
   revalidatePath("/", "layout");
   redirect("/dashboard");
+}
+
+/** Name and default rest, edited from /me. */
+export async function updateProfileAction(
+  _previous: { ok: boolean; message: string } | null,
+  formData: FormData,
+): Promise<{ ok: boolean; message: string }> {
+  const displayName = String(formData.get("display_name") ?? "").trim();
+  const rest = Number(formData.get("rest_seconds"));
+
+  if (!displayName) return { ok: false, message: "A name cannot be empty." };
+  if (displayName.length > 40)
+    return { ok: false, message: "Names cap out at 40 characters." };
+  if (!Number.isInteger(rest) || rest < 15 || rest > 600)
+    return { ok: false, message: "Rest must be between 15 and 600 seconds." };
+
+  const supabase = await createClient();
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) return { ok: false, message: "You are not signed in." };
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ display_name: displayName, rest_seconds: rest })
+    .eq("id", user.user.id);
+
+  if (error) return { ok: false, message: error.message };
+
+  // Keep auth metadata in step so the fallback greeting never goes stale.
+  await supabase.auth.updateUser({ data: { display_name: displayName } });
+
+  revalidatePath("/", "layout");
+  return { ok: true, message: "Saved." };
 }

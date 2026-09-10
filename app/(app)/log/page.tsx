@@ -11,6 +11,7 @@ import { SampleWeekButton } from "@/components/sample-week-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ButtonLink } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
+import { DateField } from "@/components/ui/date-field";
 
 export const metadata: Metadata = { title: "Log" };
 
@@ -81,8 +82,6 @@ export default async function LogPage({
           action="/log"
           className="mb-5 grid gap-3 rounded-xl border border-line bg-surface p-3 sm:grid-cols-[1fr_auto_auto_auto] sm:items-end"
         >
-          {/* Labelled, because a bare date input renders in the browser's own
-              locale and reads as a mystery box without one. */}
           <Field label="Lift">
             <Input
               name="q"
@@ -90,21 +89,13 @@ export default async function LogPage({
               placeholder="Search a lift"
             />
           </Field>
-          <Field label="From" className="sm:w-40">
-            <Input
-              name="from"
-              type="date"
-              defaultValue={params.from ?? ""}
-              className="nums"
-            />
+          {/* DateField rather than <input type="date">, which renders in the
+              browser's UI language and cannot be forced to English. */}
+          <Field label="From" className="sm:w-44">
+            <DateField name="from" defaultValue={params.from} allowEmpty />
           </Field>
-          <Field label="To" className="sm:w-40">
-            <Input
-              name="to"
-              type="date"
-              defaultValue={params.to ?? ""}
-              className="nums"
-            />
+          <Field label="To" className="sm:w-44">
+            <DateField name="to" defaultValue={params.to} allowEmpty />
           </Field>
           <div className="flex gap-2">
             <button

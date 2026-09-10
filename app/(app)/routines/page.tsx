@@ -1,15 +1,13 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { ROUTINES, DEFAULT_ROUTINE } from "@/lib/routines";
-import { getUser } from "@/lib/supabase/server";
+import { getProfile } from "@/lib/data";
 
 export const metadata: Metadata = { title: "Routines" };
 
 export default async function RoutinesPage() {
-  const user = await getUser();
-  const activeSlug =
-    (user?.user_metadata?.active_routine as string | undefined) ??
-    DEFAULT_ROUTINE;
+  const profile = await getProfile();
+  const activeSlug = profile?.active_routine ?? DEFAULT_ROUTINE;
 
   return (
     <>

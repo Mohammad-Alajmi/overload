@@ -1,33 +1,36 @@
 import type { Metadata } from "next";
-import { getUser, displayNameOf } from "@/lib/supabase/server";
-import { getSets } from "@/lib/data";
+import { getProfile, getSets } from "@/lib/data";
 import { ownLifts } from "@/lib/progression";
 import { ROUTINES, DEFAULT_ROUTINE } from "@/lib/routines";
 import { logOutAction, setActiveRoutineAction } from "@/app/auth/actions";
 import { Button } from "@/components/ui/button";
 import { StatTile } from "@/components/ui/stat-tile";
-import { formatTonnage } from "@/lib/format";
+import { ProfileForm } from "@/components/profile-form";
+import { formatTonnage, formatDayFull } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
 export const metadata: Metadata = { title: "Me" };
 
 export default async function MePage() {
-  const user = await getUser();
+  const profile = await getProfile();
   const sets = await getSets();
 
-  const name = user ? displayNameOf(user) : "there";
-  const activeSlug =
-    (user?.user_metadata?.active_routine as string | undefined) ??
-    DEFAULT_ROUTINE;
-
+  const activeSlug = profile?.active_routine ?? DEFAULT_ROUTINE;
   const tonnage = sets.reduce((sum, s) => sum + s.weight_kg * s.reps, 0);
   const sessions = new Set(sets.map((s) => s.performed_on)).size;
 
   return (
     <>
       <div className="mb-5">
-        <h1 className="text-2xl font-semibold tracking-tight">{name}</h1>
-        <p className="nums mt-0.5 text-sm text-muted">{user?.email}</p>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {profile?.display_name ?? "You"}
+        </h1>
+        <p className="nums mt-0.5 text-sm text-muted">{profile?.email}</p>
+        {profile ? (
+          <p className="mt-0.5 text-xs text-faint">
+            Member since {formatDayFull(profile.created_at.slice(0, 10))}
+          </p>
+        ) : null}
       </div>
 
       <section className="mb-6">
@@ -38,6 +41,14 @@ export default async function MePage() {
           <StatTile label="Lifts" value={String(ownLifts(sets).length)} />
           <StatTile label="Tonnage" value={formatTonnage(tonnage)} />
         </div>
+      </section>
+
+      <section className="mb-6 rounded-xl border border-line bg-surface p-4">
+        <h2 className="label mb-3">Your details</h2>
+        <ProfileForm
+          displayName={profile?.display_name ?? ""}
+          restSeconds={profile?.rest_seconds ?? 90}
+        />
       </section>
 
       <section className="mb-6">
@@ -89,9 +100,10 @@ export default async function MePage() {
       <section className="mb-6 rounded-xl border border-line bg-surface p-4">
         <h2 className="label">Who can see this</h2>
         <p className="mt-2 text-sm leading-relaxed text-muted">
-          Only you. Every row is locked to its owner by a database policy, not by
-          the page you happen to be looking at — so no other member can read your
-          sets, and neither can anyone querying the database without a session.
+          Only you. Your details and every set are locked to their owner by a
+          database policy, not by the page you happen to be looking at — so no
+          other member can read them, and neither can anyone querying the
+          database without a session.
         </p>
       </section>
 

@@ -1,5 +1,20 @@
 export type RoutineSlug = "full-body-3" | "upper-lower-4" | "ppl-6";
 
+/**
+ * One row of public.profiles. Created by a trigger the moment an account is
+ * created, so a signed-in member always has one.
+ */
+export type Profile = {
+  id: string;
+  email: string;
+  display_name: string;
+  active_routine: RoutineSlug;
+  /** Default rest between sets, in seconds. */
+  rest_seconds: number;
+  created_at: string;
+  updated_at: string;
+};
+
 /** One row of public.sets. Mirrors the migration exactly. */
 export type LiftSet = {
   id: string;
