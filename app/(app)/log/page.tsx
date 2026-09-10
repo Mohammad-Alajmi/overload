@@ -10,7 +10,7 @@ import { SetSheet } from "@/components/set-sheet";
 import { SampleWeekButton } from "@/components/sample-week-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ButtonLink } from "@/components/ui/button";
-import { Input } from "@/components/ui/field";
+import { Field, Input } from "@/components/ui/field";
 
 export const metadata: Metadata = { title: "Log" };
 
@@ -79,28 +79,33 @@ export default async function LogPage({
         <form
           method="GET"
           action="/log"
-          className="mb-5 grid gap-2 rounded-xl border border-line bg-surface p-3 sm:grid-cols-[1fr_auto_auto_auto]"
+          className="mb-5 grid gap-3 rounded-xl border border-line bg-surface p-3 sm:grid-cols-[1fr_auto_auto_auto] sm:items-end"
         >
-          <Input
-            name="q"
-            defaultValue={params.q ?? ""}
-            placeholder="Search a lift"
-            aria-label="Search a lift"
-          />
-          <Input
-            name="from"
-            type="date"
-            defaultValue={params.from ?? ""}
-            aria-label="From date"
-            className="nums sm:w-40"
-          />
-          <Input
-            name="to"
-            type="date"
-            defaultValue={params.to ?? ""}
-            aria-label="To date"
-            className="nums sm:w-40"
-          />
+          {/* Labelled, because a bare date input renders in the browser's own
+              locale and reads as a mystery box without one. */}
+          <Field label="Lift">
+            <Input
+              name="q"
+              defaultValue={params.q ?? ""}
+              placeholder="Search a lift"
+            />
+          </Field>
+          <Field label="From" className="sm:w-40">
+            <Input
+              name="from"
+              type="date"
+              defaultValue={params.from ?? ""}
+              className="nums"
+            />
+          </Field>
+          <Field label="To" className="sm:w-40">
+            <Input
+              name="to"
+              type="date"
+              defaultValue={params.to ?? ""}
+              className="nums"
+            />
+          </Field>
           <div className="flex gap-2">
             <button
               type="submit"
