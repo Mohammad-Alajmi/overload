@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+@theme {
+  /* Ground and surfaces. Dark only — there is no light palette by design. */
+  --color-ground: #18181b;
+  --color-surface: #1e1e22;
+  --color-raised: #26262b;
+  --color-line: #303036;
+
+  /* Ink */
+  --color-ink: #fafafa;
+  --color-muted: #a1a1aa;
+  --color-faint: #71717a;
+
+  /* The one accent. Actions and personal records only. */
+  --color-accent: #a3e635;
+  --color-accent-ink: #18181b;
+  --color-accent-dim: #2f3d16;
+
+  --color-danger: #f87171;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", monospace;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    background: var(--color-ground);
+    /* Stop iOS inflating text in landscape. */
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background: var(--color-ground);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* One focus treatment everywhere, using the accent. */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* Kill the number-input spinners; they are useless on a weight field. */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+}
+
+/* Every weight, rep, RPE and date renders through this, so columns of
+   numbers line up rather than dancing about. */
+@utility nums {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+@utility label {
+  font-size: 0.6875rem;
+  line-height: 1rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-faint);
+}
+
+@utility hairline {
+  border-width: 1px;
+  border-color: var(--color-line);
+}
+
+@keyframes flash-accent {
+  0% {
+    background-color: var(--color-accent-dim);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+/* The new-row confirmation from ticket 7: a single accent flash as it lands. */
+@utility flash {
+  animation: flash-accent 1.4s ease-out 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
