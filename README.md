@@ -4,8 +4,8 @@ A gym set tracker. Log the lift, the weight, the reps and the day; Overload work
 out your estimated one-rep max so you can see whether you are actually getting
 stronger.
 
-- **Live:** _pending first deploy_
-- **Repo:** _pending_
+- **Live:** https://overload-orpin.vercel.app
+- **Repo:** https://github.com/Mohammad-Alajmi/overload
 
 Built with Next.js (App Router), TypeScript, Tailwind and Supabase. Deployed on
 Vercel. Supabase project in `eu-central-1`.
