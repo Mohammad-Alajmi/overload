@@ -171,7 +171,7 @@ app/
     me/                      stats, active routine, log out
 components/                  ui primitives, set card, set sheet, SVG chart
 lib/
-  supabase/                  browser client, server client, session middleware
+  supabase/                  server client (cookie sessions) + session middleware
   progression.ts             Epley e1RM, PRs, session deltas, rolling 7 days
   routines.ts                the three routines, in code
   lifts.ts                   ~50 lift catalog and name normalisation
