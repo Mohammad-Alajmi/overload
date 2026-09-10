@@ -185,17 +185,25 @@ export function SessionExercise({
                 /* Fixed widths, not flex-1 — a weight never needs more than a
                    few characters, and stretching it across a desktop row made
                    the number look lost in an empty box. */
+                /* The width is set on a wrapper, not on the input. The input's
+                   own base class carries w-full, and Tailwind resolves that
+                   against a w-20 override by stylesheet order rather than the
+                   order they appear in the class list, so w-full wins. */
                 <div className="flex flex-1 items-center gap-2">
                   <label className="flex items-center gap-1.5">
                     <span className="sr-only">
                       Weight in kilograms for set {index + 1}
                     </span>
-                    <NumberInput
-                      value={row.weight}
-                      onChange={(e) => patch(index, { weight: e.target.value })}
-                      maxLength={6}
-                      className="w-20 text-center"
-                    />
+                    <span className="block w-20">
+                      <NumberInput
+                        value={row.weight}
+                        onChange={(e) =>
+                          patch(index, { weight: e.target.value })
+                        }
+                        maxLength={6}
+                        className="text-center"
+                      />
+                    </span>
                     <span className="shrink-0 text-xs text-faint">kg</span>
                   </label>
                   <span aria-hidden className="text-faint">
@@ -203,12 +211,14 @@ export function SessionExercise({
                   </span>
                   <label className="flex items-center">
                     <span className="sr-only">Reps for set {index + 1}</span>
-                    <NumberInput
-                      value={row.reps}
-                      onChange={(e) => patch(index, { reps: e.target.value })}
-                      maxLength={3}
-                      className="w-14 text-center"
-                    />
+                    <span className="block w-16">
+                      <NumberInput
+                        value={row.reps}
+                        onChange={(e) => patch(index, { reps: e.target.value })}
+                        maxLength={3}
+                        className="text-center"
+                      />
+                    </span>
                   </label>
                 </div>
               )}
