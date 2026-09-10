@@ -124,11 +124,13 @@ Expected output:
 
 ```
   PASS  request with no API key is refused
-        HTTP 401
-  PASS  anonymous read returns zero rows
-        HTTP 200, 0 row(s), body: []
-  PASS  anonymous insert is refused
-        HTTP 401, ... "new row violates row-level security policy for table \"sets\""
+  PASS  anonymous read of sets returns zero rows
+  PASS  anonymous read of profiles returns zero rows
+  PASS  anonymous insert into sets is refused
+  PASS  anonymous insert into profiles is refused
+  PASS  internal function handle_new_user is not callable
+  PASS  internal function sync_profile_email is not callable
+  PASS  internal function touch_updated_at is not callable
 ```
 
 The insert check matters more than the read check: an empty table returns `[]`
