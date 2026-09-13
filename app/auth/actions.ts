@@ -7,11 +7,33 @@ import { DEFAULT_ROUTINE } from "@/lib/routines";
 
 export type AuthState = { error: string | null };
 
-/** Only allow relative paths back, so ?next= cannot be used as an open redirect. */
+/**
+ * Only allow relative paths back, so ?next= cannot be used as an open redirect.
+ *
+ * Finding 6: the previous version checked the first two characters — a leading
+ * "/" that was not "//". That let through "/\evil.example.com", because
+ * browsers normalise a backslash into a forward slash, turning it into
+ * "//evil.example.com", which is a protocol-relative URL pointing off-site.
+ *
+ * Prefix checks keep losing this game, so the value is parsed instead and only
+ * accepted if it genuinely resolves to somewhere on this origin.
+ */
 function safeNext(raw: unknown): string {
+  const fallback = "/dashboard";
   const value = typeof raw === "string" ? raw : "";
-  if (value.startsWith("/") && !value.startsWith("//")) return value;
-  return "/dashboard";
+
+  if (!value.startsWith("/")) return fallback;
+  if (value.includes("\\")) return fallback;
+
+  try {
+    // Any origin will do; it exists only so a relative path can be resolved.
+    const base = "https://overload.invalid";
+    const url = new URL(value, base);
+    if (url.origin !== base) return fallback;
+    return `${url.pathname}${url.search}`;
+  } catch {
+    return fallback;
+  }
 }
 
 export async function signUpAction(
@@ -27,8 +49,12 @@ export async function signUpAction(
   if (displayName.length > 40)
     return { error: "That name is a little long — 40 characters or fewer." };
   if (!email.includes("@")) return { error: "That is not an email address." };
-  if (password.length < 8)
-    return { error: "Passwords need at least 8 characters." };
+  // Finding 3. Checked here, on the server, not only in the form. This only
+  // covers people signing up through this site; someone calling the Supabase
+  // API directly is governed by the project's own password policy, which is a
+  // dashboard setting and has to be raised there too.
+  if (password.length < 12)
+    return { error: "Passwords need at least 12 characters." };
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({

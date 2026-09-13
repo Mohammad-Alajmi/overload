@@ -17,8 +17,20 @@ const AUTH_PATHS = new Set(["/", "/login", "/signup"]);
  * of content and no empty shell hinting at data. The other half is the database
  * policy, which is what actually protects the rows — see scripts/verify-rls.mjs.
  */
-export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({ request });
+export async function updateSession(
+  request: NextRequest,
+  /**
+   * Headers to add to the request before it reaches the page. Used to pass the
+   * per-request CSP nonce through, so Next can stamp it on its own scripts.
+   */
+  extraRequestHeaders: Record<string, string> = {},
+) {
+  const requestHeaders = new Headers(request.headers);
+  for (const [key, value] of Object.entries(extraRequestHeaders)) {
+    requestHeaders.set(key, value);
+  }
+
+  let response = NextResponse.next({ request: { headers: requestHeaders } });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -32,7 +44,7 @@ export async function updateSession(request: NextRequest) {
           for (const { name, value } of cookiesToSet) {
             request.cookies.set(name, value);
           }
-          response = NextResponse.next({ request });
+          response = NextResponse.next({ request: { headers: requestHeaders } });
           for (const { name, value, options } of cookiesToSet) {
             response.cookies.set({ name, value, ...options });
           }

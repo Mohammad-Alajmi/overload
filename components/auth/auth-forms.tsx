@@ -79,13 +79,13 @@ export function SignUpForm({ next }: { next: string }) {
           placeholder="you@example.com"
         />
       </Field>
-      <Field label="Password" hint="At least 8 characters.">
+      <Field label="Password" hint="At least 12 characters.">
         <Input
           name="password"
           type="password"
           autoComplete="new-password"
           required
-          minLength={8}
+          minLength={12}
         />
       </Field>
       <Button type="submit" disabled={pending} className="w-full">
